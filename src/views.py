@@ -1,5 +1,4 @@
 import datetime
-import json
 import logging
 import os
 
@@ -12,24 +11,8 @@ from config import PATH_TO_FILE
 load_dotenv()
 
 EXCHANGE_RATES_DATA_API = os.getenv("API_KEY_APILAYER")
+API = os.getenv("API_KEY_ALPHA_VANTAGE")
 df = pd.read_excel(PATH_TO_FILE)
-df.columns = [
-    "Transaction date",
-    "Payment date",
-    "Card number",
-    "Status",
-    "Transaction amount",
-    "Transaction currency",
-    "Payment amount",
-    "Payment currency",
-    "Cashback",
-    "Category",
-    "MCC",
-    "Description",
-    "Bonuses (including cashback)",
-    "Rounding to the investment bank",
-    "The amount of the operation with rounding",
-]
 
 # Настройки логера
 views_logger = logging.getLogger("views")
@@ -66,13 +49,33 @@ def exchange_rate(currency_list: list[str]) -> dict[str, [str | int]]:
         status_code = response.status_code
         if status_code == 200:
             res = response.json()
-            currency_rate_dict = {"currency": f"{res['base']}", "rate": f"{res['rates']['RUB']}"}
+            currency_rate_dict = {"currency": f"{res['base']}", "rate": round(float(res['rates']['RUB']), 2)}
+            views_logger.info("Данные по курсу валют успешно получены")
             currency_rate.append(currency_rate_dict)
         else:
             print(f"Запрос не был успешным.")
-            views_logger.info("Запрос не удался")
-    views_logger.info("Данные по курсу валют успешно получены")
+            views_logger.warning("Запрос не удался")
+            return []
     return currency_rate
+
+
+def share_price(stock_list: list[str]) -> dict[str, [str | int]]:
+    """Функция получающая курс акций"""
+    stocks_rate = []
+    for stock in stock_list:
+        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={stock}&apikey={API}'
+        response = requests.get(url)
+        status_code = response.status_code
+        if status_code == 200:
+            res = response.json()
+            new_dict = {"stock": stock,
+                        "price": round(float(res['Time Series (Daily)'][
+                                                 (datetime.datetime.now() - datetime.timedelta(days=1)).strftime(
+                                                     '%Y-%m-%d')]['2. high']), 2)}
+            stocks_rate.append(new_dict)
+        else:
+            print('Произошла ошибка')
+    return stocks_rate
 
 
 def card_info(date_string: str, DataFrame):
@@ -80,6 +83,23 @@ def card_info(date_string: str, DataFrame):
     try:
         date_string_dt_obj = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S").date()
         start_date_for_sorting = date_string_dt_obj.replace(day=1)
+        DataFrame.columns = [
+            "Transaction date",
+            "Payment date",
+            "Card number",
+            "Status",
+            "Transaction amount",
+            "Transaction currency",
+            "Payment amount",
+            "Payment currency",
+            "Cashback",
+            "Category",
+            "MCC",
+            "Description",
+            "Bonuses (including cashback)",
+            "Rounding to the investment bank",
+            "The amount of the operation with rounding",
+        ]
         edited_df = DataFrame.drop(
             [
                 "Payment date",
@@ -105,7 +125,7 @@ def card_info(date_string: str, DataFrame):
             & (edited_df["Card number"].notnull())
             & (edited_df["Transaction amount"] <= 0)
             & (edited_df["Status"] != "FAILED")
-        ]
+            ]
         grouped_df = filtered_df_by_date.groupby(["Card number"], as_index=False).agg({"Transaction amount": "sum"})
         data_list = []
         for index, row in grouped_df.iterrows():
@@ -126,6 +146,23 @@ def top_5_transactions(date_string: str, DataFrame):
     """Функция отображения топ 5 транзакций по сумме платежа"""
     date_string_dt_obj = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S").date()
     start_date_for_sorting = date_string_dt_obj.replace(day=1)
+    DataFrame.columns = [
+        "Transaction date",
+        "Payment date",
+        "Card number",
+        "Status",
+        "Transaction amount",
+        "Transaction currency",
+        "Payment amount",
+        "Payment currency",
+        "Cashback",
+        "Category",
+        "MCC",
+        "Description",
+        "Bonuses (including cashback)",
+        "Rounding to the investment bank",
+        "The amount of the operation with rounding",
+    ]
     edited_df = DataFrame.drop(
         [
             "Payment date",
@@ -149,7 +186,7 @@ def top_5_transactions(date_string: str, DataFrame):
         & (edited_df["Transaction date"] >= start_date_for_sorting)
         & (edited_df["Transaction amount"].notnull())
         & (edited_df["Status"] != "FAILED")
-    ]
+        ]
     sorted_df_by_transaction_amount = filtered_df_by_date.sort_values(
         by=["Transaction amount"], ascending=False, key=lambda x: abs(x)
     )

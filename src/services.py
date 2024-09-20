@@ -45,7 +45,7 @@ edited_df = df.drop(
 
 data_dict = edited_df.to_dict(orient="records")
 services_logger = logging.getLogger("services")
-file_handler = logging.FileHandler("../logs/services.log", "w", encoding="utf-8")
+file_handler = logging.FileHandler("logs/services.log", "w", encoding="utf-8")
 file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 services_logger.addHandler(file_handler)
@@ -65,30 +65,33 @@ def investment_bank(month: str, transactions: list[dict[str, [str | float]]], li
     for element in transactions:
         if editing_date_format(element["Transaction date"]) == month:
             transaction_list_for_month.append(element)
-    services_logger.info("Сортировка транзакций завершена")
-    if transaction_list_for_month == []:
+    try:
+        if transaction_list_for_month != []:
+            services_logger.info("Сортировка транзакций завершена")
+            for transaction in transaction_list_for_month:
+                if abs(transaction["Transaction amount"]) <= limit and abs(transaction["Transaction amount"]) % limit != 0:
+                    amount_to_investbank = limit - abs(transaction["Transaction amount"])
+                    amount_with_rounding = abs(transaction["Transaction amount"]) + amount_to_investbank
+                    transaction["Rounding to the investment bank"] = round(amount_to_investbank, 2)
+                    transaction["The amount of the operation with rounding"] = amount_with_rounding
+                elif (
+                    abs(transaction["Transaction amount"]) >= limit and abs(transaction["Transaction amount"]) % limit != 0
+                ):
+                    amount_to_investbank = limit - abs(transaction["Transaction amount"]) % limit
+                    amount_with_rounding = abs(transaction["Transaction amount"]) + amount_to_investbank
+                    transaction["Rounding to the investment bank"] = round(amount_to_investbank, 2)
+                    transaction["The amount of the operation with rounding"] = amount_with_rounding
+                else:
+                    transaction["Rounding to the investment bank"] = 0
+                    transaction["The amount of the operation with rounding"] = transaction["Transaction amount"]
+            services_logger.info("Расчёт кэшбека завершён успешно")
+            return json.dumps(transaction_list_for_month, indent=4)
+        else:
+            raise ValueError
+    except ValueError:
         print("Некорректный формат даты")
         services_logger.error("Неверный формат даты")
         return []
-    else:
-        for transaction in transaction_list_for_month:
-            if abs(transaction["Transaction amount"]) <= limit and abs(transaction["Transaction amount"]) % limit != 0:
-                amount_to_investbank = limit - abs(transaction["Transaction amount"])
-                amount_with_rounding = abs(transaction["Transaction amount"]) + amount_to_investbank
-                transaction["Rounding to the investment bank"] = round(amount_to_investbank, 2)
-                transaction["The amount of the operation with rounding"] = amount_with_rounding
-            elif (
-                abs(transaction["Transaction amount"]) >= limit and abs(transaction["Transaction amount"]) % limit != 0
-            ):
-                amount_to_investbank = limit - abs(transaction["Transaction amount"]) % limit
-                amount_with_rounding = abs(transaction["Transaction amount"]) + amount_to_investbank
-                transaction["Rounding to the investment bank"] = round(amount_to_investbank, 2)
-                transaction["The amount of the operation with rounding"] = amount_with_rounding
-            else:
-                transaction["Rounding to the investment bank"] = 0
-                transaction["The amount of the operation with rounding"] = transaction["Transaction amount"]
-        services_logger.info("Расчёт кэшбека завершён успешно")
-        return json.dumps(transaction_list_for_month, indent=4)
 
 
 print(investment_bank("2021-12", data_dict, 50))

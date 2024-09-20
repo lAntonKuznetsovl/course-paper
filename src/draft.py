@@ -1,3 +1,4 @@
+import datetime
 import json
 import requests
 from dotenv import load_dotenv
@@ -26,10 +27,14 @@ def share_price(stock_list: list[str]) -> dict[str, [str | int]]:
         status_code = response.status_code
         if status_code == 200:
             res = response.json()
-            return res
+            new_dict = {"stock": stock,
+                        "price": round(float(res['Time Series (Daily)'][
+                                                 (datetime.datetime.now() - datetime.timedelta(days=1)).strftime(
+                                                     '%Y-%m-%d')]['2. high']), 2)}
+            stocks_rate.append(new_dict)
         else:
             print('Произошла ошибка')
-            return []
+    return stocks_rate
 
 
 with open('../user_settings.json', encoding='UTF-8') as file:
