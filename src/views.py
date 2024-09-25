@@ -1,17 +1,17 @@
 import datetime
 import logging
 import os
+from typing import Any
 
 import pandas as pd
 import requests
 from dotenv import load_dotenv
 
-from config import PATH_TO_FILE
-
 load_dotenv()
 
 EXCHANGE_RATES_DATA_API = os.getenv("API_KEY_APILAYER")
 API = os.getenv("API_KEY_ALPHA_VANTAGE")
+PATH_TO_FILE = os.path.join(os.path.dirname(__file__), "../data", "operations.xlsx")
 df = pd.read_excel(PATH_TO_FILE)
 
 # Настройки логера
@@ -27,18 +27,18 @@ def greeting() -> str:
     """Функция вывода сообщения приветствия в зависимости от времени суток"""
     opts = {"greeting": ("доброе утро", "добрый день", "добрый вечер", "доброй ночи")}
     current_time = datetime.datetime.now()
-    if current_time.hour >= 4 and current_time.hour <= 12:
+    if 4 <= current_time.hour <= 12:
         greet = opts["greeting"][0]
-    elif current_time.hour >= 12 and current_time.hour <= 16:
+    elif 12 <= current_time.hour <= 16:
         greet = opts["greeting"][1]
-    elif current_time.hour >= 16 and current_time.hour <= 24:
+    elif 16 <= current_time.hour <= 24:
         greet = opts["greeting"][2]
     else:
         greet = opts["greeting"][3]
     return greet
 
 
-def exchange_rate(currency_list: list[str]) -> dict[str, [str | int]]:
+def exchange_rate(currency_list: list[str]) -> list[dict[str, [str | int]]]:
     """Функция получения курса валют через API"""
     url = "https://api.apilayer.com/exchangerates_data/latest"
     headers = {"apikey": f"{EXCHANGE_RATES_DATA_API}"}
@@ -49,7 +49,7 @@ def exchange_rate(currency_list: list[str]) -> dict[str, [str | int]]:
         status_code = response.status_code
         if status_code == 200:
             res = response.json()
-            currency_rate_dict = {"currency": f"{res['base']}", "rate": round(float(res['rates']['RUB']), 2)}
+            currency_rate_dict = {"currency": f"{res['base']}", "rate": round(float(res["rates"]["RUB"]), 2)}
             views_logger.info("Данные по курсу валют успешно получены")
             currency_rate.append(currency_rate_dict)
         else:
@@ -59,26 +59,33 @@ def exchange_rate(currency_list: list[str]) -> dict[str, [str | int]]:
     return currency_rate
 
 
-def share_price(stock_list: list[str]) -> dict[str, [str | int]]:
+def share_price(stock_list: list[str]) -> list[dict[str, [str | int]]]:
     """Функция получающая курс акций"""
     stocks_rate = []
     for stock in stock_list:
-        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={stock}&apikey={API}'
+        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={stock}&apikey={API}"
         response = requests.get(url)
         status_code = response.status_code
         if status_code == 200:
             res = response.json()
-            new_dict = {"stock": stock,
-                        "price": round(float(res['Time Series (Daily)'][
-                                                 (datetime.datetime.now() - datetime.timedelta(days=1)).strftime(
-                                                     '%Y-%m-%d')]['2. high']), 2)}
+            new_dict = {
+                "stock": stock,
+                "price": round(
+                    float(
+                        res["Time Series (Daily)"][
+                            (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                        ]["2. high"]
+                    ),
+                    2,
+                ),
+            }
             stocks_rate.append(new_dict)
         else:
-            print('Произошла ошибка')
+            print("Произошла ошибка")
     return stocks_rate
 
 
-def card_info(date_string: str, DataFrame):
+def card_info(date_string: str, DataFrame: pd.DataFrame) -> list[dict[str, Any]]:
     """Функция отображения информации о карте в заданном формате"""
     try:
         date_string_dt_obj = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S").date()
@@ -125,14 +132,14 @@ def card_info(date_string: str, DataFrame):
             & (edited_df["Card number"].notnull())
             & (edited_df["Transaction amount"] <= 0)
             & (edited_df["Status"] != "FAILED")
-            ]
+        ]
         grouped_df = filtered_df_by_date.groupby(["Card number"], as_index=False).agg({"Transaction amount": "sum"})
         data_list = []
         for index, row in grouped_df.iterrows():
             data_dict = {
                 "Card number": row["Card number"].replace("*", ""),
                 "Transaction amount": round(row["Transaction amount"], 2),
-                "cashback": round(row["Transaction amount"] / 100, 2),
+                "cashback": abs(round(row["Transaction amount"] / 100, 2)),
             }
             data_list.append(data_dict)
         views_logger.info("Данные по картам успешно сформированны")
@@ -142,7 +149,7 @@ def card_info(date_string: str, DataFrame):
         views_logger.error("Ошибка ввода данных: неверный формат даты")
 
 
-def top_5_transactions(date_string: str, DataFrame):
+def top_5_transactions(date_string: str, DataFrame: pd.DataFrame) -> list[dict[str, Any]]:
     """Функция отображения топ 5 транзакций по сумме платежа"""
     date_string_dt_obj = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S").date()
     start_date_for_sorting = date_string_dt_obj.replace(day=1)
@@ -186,7 +193,7 @@ def top_5_transactions(date_string: str, DataFrame):
         & (edited_df["Transaction date"] >= start_date_for_sorting)
         & (edited_df["Transaction amount"].notnull())
         & (edited_df["Status"] != "FAILED")
-        ]
+    ]
     sorted_df_by_transaction_amount = filtered_df_by_date.sort_values(
         by=["Transaction amount"], ascending=False, key=lambda x: abs(x)
     )
