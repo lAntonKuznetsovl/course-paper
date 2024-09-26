@@ -15,7 +15,7 @@ date_str = input("Введите дату в формате: YYYY-MM-DD HH:MM:SS
 def return_json_answer(data_frame, date: str):
     """Главная функция выводящая результат запроса по дате"""
     info_by_transactions = {
-        "greeting": greeting(),
+        "greeting": greeting(date),
         "cards": card_info(date, data_frame),
         "top transactions": top_5_transactions(date, data_frame),
         "currency rates": exchange_rate(data_file["user_currencies"]),

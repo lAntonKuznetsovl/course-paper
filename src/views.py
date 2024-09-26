@@ -24,10 +24,10 @@ df = pd.read_excel(PATH_TO_FILE)
 # views_logger.setLevel(logging.INFO)
 
 
-def greeting() -> str:
+def greeting(date: str) -> str:
     """Функция вывода сообщения приветствия в зависимости от времени суток"""
-    opts = {"greeting": ("доброе утро", "добрый день", "добрый вечер", "доброй ночи")}
-    current_time = datetime.datetime.now()
+    opts = {"greeting": ("Доброе утро", "Добрый день", "Добрый вечер", "Доброй ночи")}
+    current_time = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     if 4 <= current_time.hour <= 12:
         greet = opts["greeting"][0]
     elif 12 <= current_time.hour <= 16:
@@ -153,64 +153,69 @@ def card_info(date_string: str, DataFrame: pd.DataFrame) -> list[dict[str, Any]]
 
 def top_5_transactions(date_string: str, DataFrame: pd.DataFrame) -> list[dict[str, Any]]:
     """Функция отображения топ 5 транзакций по сумме платежа"""
-    date_string_dt_obj = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S").date()
-    start_date_for_sorting = date_string_dt_obj.replace(day=1)
-    DataFrame.columns = [
-        "Transaction date",
-        "Payment date",
-        "Card number",
-        "Status",
-        "Transaction amount",
-        "Transaction currency",
-        "Payment amount",
-        "Payment currency",
-        "Cashback",
-        "Category",
-        "MCC",
-        "Description",
-        "Bonuses (including cashback)",
-        "Rounding to the investment bank",
-        "The amount of the operation with rounding",
-    ]
-    edited_df = DataFrame.drop(
-        [
+    try:
+        date_string_dt_obj = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S").date()
+        start_date_for_sorting = date_string_dt_obj.replace(day=1)
+        DataFrame.columns = [
+            "Transaction date",
             "Payment date",
             "Card number",
+            "Status",
+            "Transaction amount",
             "Transaction currency",
             "Payment amount",
             "Payment currency",
             "Cashback",
+            "Category",
             "MCC",
+            "Description",
             "Bonuses (including cashback)",
             "Rounding to the investment bank",
             "The amount of the operation with rounding",
-        ],
-        axis=1,
-    )
-    edited_df["Transaction date"] = edited_df["Transaction date"].apply(
-        lambda x: datetime.datetime.strptime(f"{x}", "%d.%m.%Y %H:%M:%S").date()
-    )
-    filtered_df_by_date = edited_df.loc[
-        (edited_df["Transaction date"] <= date_string_dt_obj)
-        & (edited_df["Transaction date"] >= start_date_for_sorting)
-        & (edited_df["Transaction amount"].notnull())
-        & (edited_df["Status"] != "FAILED")
         ]
-    sorted_df_by_transaction_amount = filtered_df_by_date.sort_values(
-        by=["Transaction amount"], ascending=False, key=lambda x: abs(x)
-    )
-    top_transactions = sorted_df_by_transaction_amount[0:5]
-    data_list = []
-    for index, row in top_transactions.iterrows():
-        data_dict = {
-            "date": row["Transaction date"].strftime("%d.%m.%Y"),
-            "amount": round(row["Transaction amount"], 2),
-            "category": row["Category"],
-            "description": row["Description"],
-        }
-        data_list.append(data_dict)
-    # views_logger.info("Данные по топу транзакций успешно сформированны")
-    return data_list
+        edited_df = DataFrame.drop(
+            [
+                "Payment date",
+                "Card number",
+                "Transaction currency",
+                "Payment amount",
+                "Payment currency",
+                "Cashback",
+                "MCC",
+                "Bonuses (including cashback)",
+                "Rounding to the investment bank",
+                "The amount of the operation with rounding",
+            ],
+            axis=1,
+        )
+        edited_df["Transaction date"] = edited_df["Transaction date"].apply(
+            lambda x: datetime.datetime.strptime(f"{x}", "%d.%m.%Y %H:%M:%S").date()
+        )
+        filtered_df_by_date = edited_df.loc[
+            (edited_df["Transaction date"] <= date_string_dt_obj)
+            & (edited_df["Transaction date"] >= start_date_for_sorting)
+            & (edited_df["Transaction amount"].notnull())
+            & (edited_df["Status"] != "FAILED")
+            ]
+        sorted_df_by_transaction_amount = filtered_df_by_date.sort_values(
+            by=["Transaction amount"], ascending=False, key=lambda x: abs(x)
+        )
+        top_transactions = sorted_df_by_transaction_amount[0:5]
+        data_list = []
+        for index, row in top_transactions.iterrows():
+            data_dict = {
+                "date": row["Transaction date"].strftime("%d.%m.%Y"),
+                "amount": round(row["Transaction amount"], 2),
+                "category": row["Category"],
+                "description": row["Description"],
+            }
+            data_list.append(data_dict)
+        # views_logger.info("Данные по топу транзакций успешно сформированны")
+    except ValueError:
+        print("Неверный формат даты")
+        return []
+    else:
+        return data_list
 
 
 if __name__ == "__main__":
