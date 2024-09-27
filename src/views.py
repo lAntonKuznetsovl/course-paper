@@ -135,7 +135,7 @@ def card_info(date_string: str, DataFrame: pd.DataFrame) -> list[dict[str, Any]]
             & (edited_df["Card number"].notnull())
             & (edited_df["Transaction amount"] <= 0)
             & (edited_df["Status"] != "FAILED")
-            ]
+        ]
         grouped_df = filtered_df_by_date.groupby(["Card number"], as_index=False).agg({"Transaction amount": "sum"})
         data_list = []
         for index, row in grouped_df.iterrows():
@@ -198,7 +198,7 @@ def top_5_transactions(date_string: str, DataFrame: pd.DataFrame) -> list[dict[s
             & (edited_df["Transaction date"] >= start_date_for_sorting)
             & (edited_df["Transaction amount"].notnull())
             & (edited_df["Status"] != "FAILED")
-            ]
+        ]
         sorted_df_by_transaction_amount = filtered_df_by_date.sort_values(
             by=["Transaction amount"], ascending=False, key=lambda x: abs(x)
         )

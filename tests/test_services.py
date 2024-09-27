@@ -1,4 +1,5 @@
 import pytest
+
 from src.services import investment_bank
 
 
@@ -16,9 +17,4 @@ def test_printing_message(capsys, test_list_for_investment_bank):
     """Тест вывода сообщенгия при ошибке в формате даты"""
     investment_bank("2021-12-31", test_list_for_investment_bank, 50)
     result = capsys.readouterr()
-    assert (
-            result.out == "Некорректный формат даты\n"
-    )
-
-
-
+    assert result.out == "Некорректный формат даты\n"

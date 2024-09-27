@@ -87,9 +87,9 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
             (edited_df["Transaction date"] <= end_date_obj)
             & (edited_df["Transaction date"] >= start_date_obj)
             & (edited_df["Category"] == category)
-            ]
+        ]
         report_df.loc[:, "Transaction date"] = report_df["Transaction date"].apply(lambda x: x.strftime("%d.%m.%Y"))
-        if not report_df.to_dict(orient='records'):
+        if not report_df.to_dict(orient="records"):
             raise NameError
     except ValueError:
         reports_logger.error("Ошибка в выборке операций: не корректный формат даты")
@@ -156,7 +156,7 @@ def average_cost_amount(data_frame: pd.DataFrame, date: Optional[str] = None) ->
             (edited_df["Transaction date"] <= date)
             & (edited_df["Transaction date"] >= start_date_for_counting)
             & (edited_df["Transaction amount"] < 0)
-            ]
+        ]
         grouped_df_by_date = filtered_df.groupby(["Transaction date"], as_index=False).agg(
             {"Transaction amount": "mean"}
         )
@@ -173,4 +173,4 @@ def average_cost_amount(data_frame: pd.DataFrame, date: Optional[str] = None) ->
 
 
 print(average_cost_amount(df, "2021-12-31"))
-print(spending_by_category(df, "Супермаркеты","31.12.2021"))
+print(spending_by_category(df, "Супермаркеты", "31.12.2021"))
