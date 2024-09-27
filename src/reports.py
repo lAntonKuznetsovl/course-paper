@@ -10,12 +10,12 @@ import pandas as pd
 PATH_TO_FILE = os.path.join(os.path.dirname(__file__), "../data", "operations.xlsx")
 df = pd.read_excel(PATH_TO_FILE)
 
-# reports_logger = logging.getLogger("reports")
-# file_handler = logging.FileHandler("../logs/reports", "w", encoding="utf-8")
-# file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
-# file_handler.setFormatter(file_formatter)
-# reports_logger.addHandler(file_handler)
-# reports_logger.setLevel(logging.INFO)
+reports_logger = logging.getLogger("reports")
+file_handler = logging.FileHandler("../logs/reports", "w", encoding="utf-8")
+file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
+file_handler.setFormatter(file_formatter)
+reports_logger.addHandler(file_handler)
+reports_logger.setLevel(logging.INFO)
 
 
 def writing_report(filename: str) -> Callable:
@@ -92,17 +92,17 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         if not report_df.to_dict(orient='records'):
             raise NameError
     except ValueError:
-        # reports_logger.error("Ошибка в выборке операций: не корректный формат даты")
+        reports_logger.error("Ошибка в выборке операций: не корректный формат даты")
         print("Некорректный формат даты")
         return pd.DataFrame({})
     except NameError:
         print("Неверно введена категория")
         return pd.DataFrame({})
     else:
-#         reports_logger.info("Выборка операций успешно завершена")
+        reports_logger.info("Выборка операций успешно завершена")
         return report_df
     finally:
-#         reports_logger.info("Завершение работы программы")
+        reports_logger.info("Завершение работы программы")
         print("Формирование отчёта завершено")
 
 
@@ -164,9 +164,13 @@ def average_cost_amount(data_frame: pd.DataFrame, date: Optional[str] = None) ->
         grouped_df_by_date.loc[:, "Transaction date"] = grouped_df_by_date["Transaction date"].apply(
             lambda x: x.strftime("%d.%m.%Y")
         )
-        # reports_logger.info("Подсчёт среднедневных трат завершён")
+        reports_logger.info("Подсчёт среднедневных трат завершён")
         return grouped_df_by_date
     except ValueError:
-#         reports_logger.error("Не корректно указанна дата")
+        reports_logger.error("Не корректно указанна дата")
         print("Введён не верный формат даты")
         return pd.DataFrame({})
+
+
+print(average_cost_amount(df, "2021-12-31"))
+print(spending_by_category(df, "Супермаркеты","31.12.2021"))

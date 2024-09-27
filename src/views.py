@@ -16,12 +16,12 @@ df = pd.read_excel(PATH_TO_FILE)
 
 
 # Настройки логера
-# views_logger = logging.getLogger("views")
-# file_handler = logging.FileHandler("logs/views.log", "w", encoding="utf-8")
-# file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
-# file_handler.setFormatter(file_formatter)
-# views_logger.addHandler(file_handler)
-# views_logger.setLevel(logging.INFO)
+views_logger = logging.getLogger("views")
+file_handler = logging.FileHandler("logs/views.log", "w", encoding="utf-8")
+file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
+file_handler.setFormatter(file_formatter)
+views_logger.addHandler(file_handler)
+views_logger.setLevel(logging.INFO)
 
 
 def greeting(date: str) -> str:
@@ -51,12 +51,12 @@ def exchange_rate(currency_list: list[str]) -> list[dict[str, [str | int]]]:
         if status_code == 200:
             res = response.json()
             currency_rate_dict = {"currency": f"{res["base"]}", "rate": round(float(res["rates"]["RUB"]), 2)}
-            # views_logger.info("Данные по курсу валют успешно получены")
             currency_rate.append(currency_rate_dict)
         else:
             print("Запрос не был успешным.")
-            # views_logger.warning("Запрос не удался")
+            views_logger.warning("Запрос не удался")
             return []
+    views_logger.info("Данные по курсу валют успешно получены")
     return currency_rate
 
 
@@ -82,7 +82,9 @@ def share_price(stock_list: list[str]) -> list[dict[str, [str | int]]]:
             }
             stocks_rate.append(new_dict)
         else:
+            views_logger.info("Произошла ощибка")
             print("Произошла ошибка")
+    views_logger.info("Данные по курсу акций успешно получены")
     return stocks_rate
 
 
@@ -143,11 +145,11 @@ def card_info(date_string: str, DataFrame: pd.DataFrame) -> list[dict[str, Any]]
                 "cashback": abs(round(row["Transaction amount"] / 100, 2)),
             }
             data_list.append(data_dict)
-        # views_logger.info("Данные по картам успешно сформированны")
+        views_logger.info("Данные по картам успешно сформированны")
         return data_list
     except ValueError:
         print("Неверный формат даты")
-        # views_logger.error("Ошибка ввода данных: неверный формат даты")
+        views_logger.error("Ошибка ввода данных: неверный формат даты")
         return []
 
 
@@ -210,8 +212,9 @@ def top_5_transactions(date_string: str, DataFrame: pd.DataFrame) -> list[dict[s
                 "description": row["Description"],
             }
             data_list.append(data_dict)
-        # views_logger.info("Данные по топу транзакций успешно сформированны")
+        views_logger.info("Данные по топу транзакций успешно сформированны")
     except ValueError:
+        views_logger.error("Ошибка ввода данных: неверный формат даты")
         print("Неверный формат даты")
         return []
     else:

@@ -44,12 +44,12 @@ edited_df = df.drop(
 )
 
 data_list = edited_df.to_dict(orient="records")
-# services_logger = logging.getLogger("services")
-# file_handler = logging.FileHandler("logs/services.log", "w", encoding="utf-8")
-# file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
-# file_handler.setFormatter(file_formatter)
-# services_logger.addHandler(file_handler)
-# services_logger.setLevel(logging.INFO)
+services_logger = logging.getLogger("services")
+file_handler = logging.FileHandler("../logs/services.log", "w", encoding="utf-8")
+file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
+file_handler.setFormatter(file_formatter)
+services_logger.addHandler(file_handler)
+services_logger.setLevel(logging.INFO)
 
 
 def investment_bank(month: str, transactions: list[dict[str, [str | float]]], limit: int) -> float:
@@ -60,7 +60,7 @@ def investment_bank(month: str, transactions: list[dict[str, [str | float]]], li
             transaction_list_for_month.append(element)
     try:
         if transaction_list_for_month:
-            # services_logger.info("Сортировка транзакций завершена")
+            services_logger.info("Сортировка транзакций завершена")
             for transaction in transaction_list_for_month:
                 if (
                     abs(transaction["Transaction amount"]) <= limit
@@ -81,7 +81,7 @@ def investment_bank(month: str, transactions: list[dict[str, [str | float]]], li
                 else:
                     transaction["Rounding to the investment bank"] = 0
                     transaction["The amount of the operation with rounding"] = transaction["Transaction amount"]
-            # services_logger.info("Расчёт кэшбека по каждой транзакции завершён успешно")
+            services_logger.info("Расчёт кэшбека по каждой транзакции завершён успешно")
             total_sum_to_investment_bank = 0
             for element in transaction_list_for_month:
                 total_sum_to_investment_bank += element["Rounding to the investment bank"]
@@ -90,8 +90,8 @@ def investment_bank(month: str, transactions: list[dict[str, [str | float]]], li
             raise ValueError
     except ValueError:
         print("Некорректный формат даты")
-        # services_logger.error("Неверный формат даты")
+        services_logger.error("Неверный формат даты")
         return 0
 
 
-print(investment_bank("2021-12-12", data_list, 50))
+print(investment_bank("2021-12", data_list, 50))
