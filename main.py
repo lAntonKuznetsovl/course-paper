@@ -12,7 +12,7 @@ with open("user_settings.json") as file:
 date_str = input("Введите дату в формате: YYYY-MM-DD HH:MM:SS: ")
 
 
-def return_json_answer(data_frame, date: str):
+def return_json_answer(data_frame: pd.DataFrame, date: str):
     """Главная функция выводящая результат запроса по дате"""
     info_by_transactions = {
         "greeting": greeting(date),
