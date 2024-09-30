@@ -6,7 +6,7 @@ from src.utils import card_info, exchange_rate, greeting, share_price, top_5_tra
 
 
 def return_json_answer(data_frame: pd.DataFrame, date: str, user_settings):
-    """Главная функция выводящая результат запроса по дате"""
+    """Функция выводящая результат запроса по дате"""
     info_by_transactions = {
         "greeting": greeting(),
         "cards": card_info(date, data_frame),

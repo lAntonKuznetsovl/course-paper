@@ -51,6 +51,7 @@ with open("user_settings.json") as file:
 
 
 def main(date: str, data_frame: pd.DataFrame):
+    """Главная функция выводящая результат работы всех функций"""
     print(return_json_answer(data_frame, date, data_file))
     limit_for_rounding_investment_bank = int(input("Введите лимит округления суммы для Инвесткопилки: "))
     print(
