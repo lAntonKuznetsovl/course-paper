@@ -1,62 +1,44 @@
+import datetime
+import json
 import logging
 import os
 
-import pandas as pd
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+log_path = os.path.join(BASE_DIR, "logs", "services.log")
 
-from src.utils import editing_date_format
-
-PATH_TO_FILE = os.path.join(os.path.dirname(__file__), "../data", "operations.xlsx")
-df = pd.read_excel(PATH_TO_FILE)
-df.columns = [
-    "Transaction date",
-    "Payment date",
-    "Card number",
-    "Status",
-    "Transaction amount",
-    "Transaction currency",
-    "Payment amount",
-    "Payment currency",
-    "Cashback",
-    "Category",
-    "MCC",
-    "Description",
-    "Bonuses (including cashback)",
-    "Rounding to the investment bank",
-    "The amount of the operation with rounding",
-]
-edited_df = df.drop(
-    [
-        "Payment date",
-        "Card number",
-        "Status",
-        "Transaction currency",
-        "Payment amount",
-        "Payment currency",
-        "Cashback",
-        "Category",
-        "MCC",
-        "Description",
-        "Bonuses (including cashback)",
-        "Rounding to the investment bank",
-        "The amount of the operation with rounding",
-    ],
-    axis=1,
-)
-
-data_list = edited_df.to_dict(orient="records")
 services_logger = logging.getLogger("services")
-file_handler = logging.FileHandler("../logs/services.log", "w", encoding="utf-8")
+file_handler = logging.FileHandler(log_path, "w", encoding="utf-8")
 file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
 file_handler.setFormatter(file_formatter)
 services_logger.addHandler(file_handler)
 services_logger.setLevel(logging.INFO)
 
 
-def investment_bank(month: str, transactions: list[dict[str, [str | float]]], limit: int) -> float:
+def editing_date_format_for_investment_bank(date_string: str) -> str:
+    """Функция приводящая дату к нужному формату для инвесткопилки"""
+    try:
+        date_string_dt_obj = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S").date()
+        fixed_date = datetime.datetime.strftime(date_string_dt_obj, "%Y-%m")
+        return fixed_date
+    except ValueError:
+        print("Неверный формат даты")
+
+
+def editing_date_format_for_dataframe(date_string: str) -> str:
+    """Функция приводящая дату к нужному формату для датафрейма"""
+    try:
+        date_string_dt_obj = datetime.datetime.strptime(date_string, "%d.%m.%Y %H:%M:%S").date()
+        fixed_date = datetime.datetime.strftime(date_string_dt_obj, "%Y-%m")
+        return fixed_date
+    except ValueError:
+        print("Неверный формат даты")
+
+
+def investment_bank(month: str, transactions: list[dict[str, [str | float]]], limit: int):
     """Функция расчитывающая сумму отложенную в инвесткопилку для каждой транзакции"""
     transaction_list_for_month = []
     for element in transactions:
-        if editing_date_format(element["Transaction date"]) == month:
+        if editing_date_format_for_dataframe(element["Transaction date"]) == month:
             transaction_list_for_month.append(element)
     try:
         if transaction_list_for_month:
@@ -85,13 +67,12 @@ def investment_bank(month: str, transactions: list[dict[str, [str | float]]], li
             total_sum_to_investment_bank = 0
             for element in transaction_list_for_month:
                 total_sum_to_investment_bank += element["Rounding to the investment bank"]
-            return round(total_sum_to_investment_bank, 2)
+            dict_for_json = {"Investment bank": {f"{month}": round(total_sum_to_investment_bank, 2)}}
+            answer_in_json_format = json.dumps(dict_for_json, indent=4, ensure_ascii=False)
+            return answer_in_json_format
         else:
             raise ValueError
     except ValueError:
         print("Некорректный формат даты")
         services_logger.error("Неверный формат даты")
         return 0
-
-
-print(investment_bank("2021-12", data_list, 50))

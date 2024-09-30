@@ -3,27 +3,64 @@ import json
 import pandas as pd
 
 from config import PATH_TO_FILE
-from src.views import card_info, exchange_rate, greeting, share_price, top_5_transactions
+from src.reports import average_cost_amount, spending_by_category, writing_report
+from src.services import editing_date_format_for_investment_bank, investment_bank
+from src.views import return_json_answer
 
 df = pd.read_excel(PATH_TO_FILE)
+df.columns = [
+    "Transaction date",
+    "Payment date",
+    "Card number",
+    "Status",
+    "Transaction amount",
+    "Transaction currency",
+    "Payment amount",
+    "Payment currency",
+    "Cashback",
+    "Category",
+    "MCC",
+    "Description",
+    "Bonuses (including cashback)",
+    "Rounding to the investment bank",
+    "The amount of the operation with rounding",
+]
+edited_df_from_investment_bank = df.drop(
+    [
+        "Payment date",
+        "Card number",
+        "Status",
+        "Transaction currency",
+        "Payment amount",
+        "Payment currency",
+        "Cashback",
+        "Category",
+        "MCC",
+        "Description",
+        "Bonuses (including cashback)",
+        "Rounding to the investment bank",
+        "The amount of the operation with rounding",
+    ],
+    axis=1,
+)
+
+data_list = edited_df_from_investment_bank.to_dict(orient="records")
+
 with open("user_settings.json") as file:
     data_file = json.load(file)
 
-date_str = input("Введите дату в формате: YYYY-MM-DD HH:MM:SS: ")
+
+def main(date: str, data_frame: pd.DataFrame):
+    print(return_json_answer(data_frame, date, data_file))
+    limit_for_rounding_investment_bank = int(input("Введите лимит округления суммы для Инвесткопилки: "))
+    print(
+        investment_bank(editing_date_format_for_investment_bank(date), data_list, limit_for_rounding_investment_bank)
+    )
+    category = input("Введите категорию для фильтрации транзакций: ")
+    print(spending_by_category(data_frame, category, date).to_json(orient="records", indent=4, force_ascii=False))
+    print(average_cost_amount(data_frame, date).to_json(orient="records", indent=4, force_ascii=False))
 
 
-def return_json_answer(data_frame: pd.DataFrame, date: str):
-    """Главная функция выводящая результат запроса по дате"""
-    info_by_transactions = {
-        "greeting": greeting(date),
-        "cards": card_info(date, data_frame),
-        "top transactions": top_5_transactions(date, data_frame),
-        "currency rates": exchange_rate(data_file["user_currencies"]),
-        "stock_prices": share_price(data_file["user_stocks"]),
-    }
-    answer_in_json_format = json.dumps(info_by_transactions, indent=4, ensure_ascii=False)
-    return answer_in_json_format
-
-
-# print(return_json_answer(df, "2021-11-14 14:46:24"))
-print(return_json_answer(df, date_str))
+if __name__ == "__main__":
+    date_str = input("Введите дату в формате: YYYY-MM-DD HH:MM:SS: ")
+    print(main(date_str, df))

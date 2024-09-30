@@ -1,16 +1,21 @@
 from unittest.mock import patch
 
 import pytest
+from freezegun import freeze_time
 
 from src.views import card_info, exchange_rate, greeting, top_5_transactions
 
 
 def test_greeting():
-    """Тест приветствия"""
-    assert greeting("2021-11-14 14:00:00") == "Добрый день"
-    assert greeting("2021-11-14 01:00:00") == "Доброй ночи"
-    assert greeting("2021-11-14 10:00:00") == "Доброе утро"
-    assert greeting("2021-11-14 20:00:00") == "Добрый вечер"
+    """Тест вывода приветсвия в зависимости от текущего времени"""
+    with freeze_time("2024-09-30 16:39:11"):
+        assert greeting() == "Добрый день"
+    with freeze_time("2024-09-30 08:39:11"):
+        assert greeting() == "Доброе утро"
+    with freeze_time("2024-09-30 19:39:11"):
+        assert greeting() == "Добрый вечер"
+    with freeze_time("2024-09-30 03:39:11"):
+        assert greeting() == "Доброй ночи"
 
 
 @patch("src.views.requests.get")
