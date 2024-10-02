@@ -1,4 +1,3 @@
-import datetime
 from typing import Any
 
 import pandas as pd
@@ -26,12 +25,12 @@ def answer_stocks() -> dict[str, Any]:
         "Meta Data": {
             "1. Information": "Daily Prices (open, high, low, close) and Volumes",
             "2. Symbol": "AAPL",
-            "3. Last Refreshed": f"{(datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")}",
+            "3. Last Refreshed": "2024-09-24",
             "4. Output Size": "Compact",
             "5. Time Zone": "US/Eastern",
         },
         "Time Series (Daily)": {
-            f"{(datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")}": {
+            "2024-09-24": {
                 "1. open": "219.7800",
                 "2. high": "221.1900",
                 "3. low": "218.1600",
@@ -53,7 +52,7 @@ def answer_stocks() -> dict[str, Any]:
 def test_df() -> pd.DataFrame:
     """Тестовый DataFrame"""
     test_dict = {
-        "Дата операции": [
+        "Transaction date": [
             "31.12.2021 16:44:00",
             "31.12.2021 16:42:04",
             "31.12.2021 16:39:04",
@@ -66,7 +65,7 @@ def test_df() -> pd.DataFrame:
             "28.10.2021 15:56:36",
             "16.09.2021 12:55:33",
         ],
-        "Дата платежа": [
+        "Payment date": [
             "31.12.2021",
             "31.12.2021",
             "31.12.2021",
@@ -79,7 +78,7 @@ def test_df() -> pd.DataFrame:
             "28.10.2021",
             "16.09.2021",
         ],
-        "Номер карты": [
+        "Card number": [
             "*7197",
             "*7197",
             "*7197",
@@ -92,13 +91,25 @@ def test_df() -> pd.DataFrame:
             "*7197",
             "*7197",
         ],
-        "Статус": ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"],
-        "Сумма операции": [-160.89, -64.00, -118.12, -564, -1.32, -500.00, -525.00, -681, -339.90, -1468.00, -110.00],
-        "Валюта операции": ["RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB"],
-        "Сумма платежа": [-160.89, -64.00, -118.12, -564, -1.32, -500.00, -525.00, -681, -339.90, -1468.00, -110.00],
-        "Валюта платежа": ["RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB"],
-        "Кэшбэк": [None, None, None, None, 70, None, None, None, None, None, None],
-        "Категория": [
+        "Status": ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"],
+        "Transaction amount": [
+            -160.89,
+            -64.00,
+            -118.12,
+            -564.0,
+            -1.32,
+            -500.00,
+            -525.00,
+            -681,
+            -339.90,
+            -1468.00,
+            -110.00,
+        ],
+        "Transaction currency": ["RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB"],
+        "Payment amount": [-160.89, -64.00, -118.12, -564, -1.32, -500.00, -525.00, -681, -339.90, -1468.00, -110.00],
+        "Payment currency": ["RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB", "RUB"],
+        "Cashback": [None, None, None, None, 70, None, None, None, None, None, None],
+        "Category": [
             "Супермаркеты",
             "Супермаркеты",
             "Супермаркеты",
@@ -111,7 +122,8 @@ def test_df() -> pd.DataFrame:
             "Дом и ремонт",
             "Фастфуд",
         ],
-        "Описание": [
+        "MCC": [5411, 5411, 5411, 5411, 5411, 4111, 5651, 5912, 5411, 5200, 5814],
+        "Description": [
             "Колхоз",
             "Колхоз",
             "Магнит",
@@ -124,10 +136,9 @@ def test_df() -> pd.DataFrame:
             "Леруа Мерлен",
             "Mouse Tail",
         ],
-        "МСС": [5411, 5411, 5411, 5411, 5411, 4111, 5651, 5912, 5411, 5200, 5814],
-        "Бонусы (включая кэшбэк)": [3, 1, 2, 5, 0, 5, 5, 34, 16, 4, 2],
-        "Округление на инвесткопилку": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        "Сумма операции с округлением": [
+        "Bonuses (including cashback)": [3, 1, 2, 5, 0, 5, 5, 34, 16, 4, 2],
+        "Rounding to the investment bank": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        "The amount of the operation with rounding": [
             160.89,
             64.00,
             118.12,

@@ -8,7 +8,7 @@ from src.reports import average_cost_amount, spending_by_category, writing_repor
 
 def test_spending_by_category(test_df):
     """Тест вывода трат по категории"""
-    new_df = spending_by_category(test_df, "Супермаркеты", "31.12.2021")
+    new_df = spending_by_category(test_df, "Супермаркеты", "2021-12-31 14:46:24")
     sorted_list_category = new_df.to_dict(orient="records")
     assert sorted_list_category == [
         {"Transaction date": "31.12.2021", "Transaction amount": -160.89, "Category": "Супермаркеты"},
@@ -27,14 +27,14 @@ def test_spending_by_category_with_incorrect_date(capsys, test_df):
 
 def test_spending_by_category_with_incorrect_category(capsys, test_df):
     """Тест вывода сообщения при ошибке ввода категории"""
-    assert (spending_by_category(test_df, "Супермаркет", "31.12.2021")).to_dict(orient="records") == []
+    assert (spending_by_category(test_df, "Супермаркет", "2021-12-31 14:46:24")).to_dict(orient="records") == []
     result = capsys.readouterr()
     assert result.out == "Неверно введена категория\nФормирование отчёта завершено\n"
 
 
 def test_average_cost_amount(test_df):
     """Тест подсчёта средних трат за день за период 3х месяцев от указанной даты"""
-    assert (average_cost_amount(test_df, "2021-12-31")).to_dict(orient="records") == [
+    assert (average_cost_amount(test_df, "2021-12-31 14:46:24")).to_dict(orient="records") == [
         {"Transaction date": "28.10.2021", "Transaction amount": -1468.0},
         {"Transaction date": "19.11.2021", "Transaction amount": -339.9},
         {"Transaction date": "25.11.2021", "Transaction amount": -681.0},
